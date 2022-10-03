@@ -1,0 +1,294 @@
+\documentclass[11pt,a4paper]{ivoa}
+\input tthdefs
+
+\usepackage{listings}
+\lstloadlanguages{XML,sh}
+\lstset{flexiblecolumns=true,tagstyle=\ttfamily,
+showstringspaces=False}
+\usepackage{todonotes}
+\usepackage{lscape}
+\usepackage{longtable}
+
+
+\title{Pulsar and FRB Radio Data Discovery and Access}
+
+\ivoagroup{DAL}
+
+\author{Alessandra Zanichelli, Ada Nebot-Gomez, Brent Miszalski, Mireille Louys, Alan Loh, Mark Lacy, Jean-Matthias Griessmeyer, Yann Grange, Vincenzo Galluzzi, Mark Cresitello-Dittmar, Baptiste Cecconi,  Fran\c cois Bonnarel} 
+
+\editor{Fran\c cois Bonnarel }    
+
+\begin{document}
+
+\begin{abstract}
+This document presents the issues of  Discovery and Access for time dependant radio data, specially dedicated to point sources such as pulsars or FRB. The Discovery phase may follow  different modes, including ObsTap discovery. Proposal are made for mapping of PSRFITS and filterbank keywords to ObsCore. Extensions are proposed when needed. Usage of IVOA provenance metadata and Access using SODA interface is also presented.   
+
+
+\end{abstract}
+
+\section*{Acknowledgments}
+The authors would like to thank all the discussions participants in RadioIG, TDIG, DAL and DM working groups for their ideas and critical reviews on these matters. 
+\section{Introduction}
+
+         Radioastronomy faces at least two categories of objects where the signal varies with time = pulsars and FRB.      
+      Although very different in nature these two categories of objects require that time of recording is registered during observations. They also are pointed observations related to specific sources.
+      
+      Two main formats are available for that : PSRFITS and filterbank. PSRFITS\footnote{https://www.atnf.csiro.au/research/pulsar/psrfits\_definition/PsrfitsDocumentation.html} is a FITS extension flavor defining some specific rules on the way data are to be organized into specific HDUs and metadata are to be expressed in the headers.   PSRFITS contains the observed data themselves,  but also additional auxiliary data.
+      
+      
+       Filterbank\footnote{https://sigproc.sourceforge.net/sigproc.pdf} is made of a header followed by a binary table. 
+       
+      
+       
+       For pulsars the so called search mode of PSR fits can be compared to filterbank in such a way that it's a simple TimeSeries. 
+       But as pulsars are periodic variable objects PSR fits can also give phased data  after determination of the pulsar period (giving mean measurements for each phase in the period) this is called the folded mode. 
+
+
+\section{How these data can be discovered ?}
+
+ We can imagine 3 modes of discovery according to "TimeSeriesDiscovery and access" IVOA note\footnote{https://ivoa.net/documents/Notes/TimeSeriesDiscoveryAndAccess/20180722/index.html}\footnote{new version: https://github.com/ivoa/TimeSeriesDiscoveryAndAccess/releases/download/auto-pdf-preview/TimeSeriesDiscoveryAndAccess-draft.pdf}
+ \begin{itemize}
+
+  \item{}
+  
+     We have catalogs of pulsars or FRB (in Vizier or any tap service) and we simply link the datafile to the source by using some link (column with URL, LINK feature or DataLink)
+             These are some example of such catalogs:
+             \begin{itemize}
+              \item ATNF Pulsar Catalogue (Manchester+, 2005) 
+              \item Pulsar subpulse modulation properties at 21cm (Weltevrede+, 2006)
+              \item First CHIME/FRB Fast Radio Burst Catalog (CHIME/FRB Col.+, 2021)
+              \item FRBCAT: The Fast Radio Burst (FRB) Catalog (Petroff+, 2016) 
+             \end{itemize}
+             
+     
+
+
+     
+  
+
+          
+
+
+    \item{}
+
+         We have an archive of observation which may be related to objects (or not) . We want astronomers to discover them. These data have to be discovered using 
+       ObsCore metadata \citep{2017ivoa.spec.0509L} describing them. See Nebot et al, 2018\footnote{https://volute.g-vo.org/svn/trunk/projects/time-domain/time-
+series/note/TSSerializationNote.pdf} and Louys et al, 2022\footnote{https://wiki.ivoa.net/internal/IVOA/JointRIG-TDIGVirtualMeeting/ObscoreExtensionforTimeandFreq-MLouys.pdf}for a  list of additional metadata which could be needed for time series Discovery.   
+
+         The Astron ARTS Simple cone search service may be seen as a variant of that approach with less standardisation of the dataset description.   
+
+
+      \item{}  We store in the same service catalog of objects and catalog of datasets metadata. We can set constraints on both type of parameters on joins of the two tables.
+             
+           
+\end{itemize} 
+
+These are  a couple of example queries a user may like to send: 
+
+ \begin{itemize}
+        \item  Give me the  link of available radio datasets for pulsar "so and so" 
+        \item   Give me back the descriptions of datasets available where the direction is around "blah" the wavelength is inside the range "blah,blah" , the cadence is smaller than 1 mas and the original timescale is UTC with refposition provided.
+        \item  From this PSRFITS that your service describe I want to retrieve a dynamical spectrum in FITS image format in time range "blah,blah"  and spectral range "blah,blah"  
+ \end{itemize} 
+             
+             
+\section{Proposed mapping between ObsCore and PSRFITS}
+
+Among us we can distinguish the Nan\c cay group (BC,JMG,AL) and the INAF group (VG,AZ). Both made an attempt to map PSRFITS to ObsCore. Results are presented in table \ref{tab:ObsCoreAtt}
+For each obscore parameter two formulae are proposed using PSRFITS keywords value. A last column add some comments comparing the two approaches.
+
+\section{Proposed mapping between ObsCore Extensions and PSRFITS}
+
+Some useful metadata for discovery cannot be mapped onto main ObsCore. Recently two extensions of ObsCore have been proposed, one for radio\footnote{https://github.com/ivoa/ObsCoreExtensionForVisibilityData/releases/download/auto-pdf-preview/ObsCoreExtensionForVisibilityData-draft.pdf} and the other one for 
+ time\footnote{https://wiki.ivoa.net/internal/IVOA/JointRIG-TDIGVirtualMeeting/ObscoreExtensionforTimeandFreq-MLouys.pdf}. Our mapping proposal can be found in table \ref{tab:ObsCoreExt}. This table again contains a comment column to explain the rationale of our choices.
+ 
+ \section{Provenance metadata and ancillary data}
+ 
+ Some keywords in the main header and the whole HISTORY HDU contains provenance metadata. Telescope and instrument name belong to ObsCore although they could be tackled within the scope of the IVOA Provenance data model \citep{2020ivoa.spec.0411S}.
+ 
+ Moreover, observation is a special "type" of Activity from which datasets are "derived". Observation makes "use" of entities of type device such as "telescopes" "instruments". Different observations modes (such as tracking modes of pulsar observations) can be managed as "tracking" parameter values of the activity description. 
+ 
+ Configuration of telescope or instrument are entities "used" by the observation as well.
+ 
+ The processing phase as presented in the  history HDU can be described as a succession of activities or workflow with its parameters and configuration. 
+ 
+ Some PSRFITS HDU also contain ancillary metadata useful for analysis or resulting of previous analysis such as "Digitiser statistics binary table" or "Digitiser counts binary table".  The DataLink \citep{2015ivoa.spec.0617D} {links} facility allows to link various resources to a single record (dataset description) in a discovery service query response. It is possible to link the ancillary data as well as the main obervation data to the dataset record this way. URL with fragments are allowed, a feature permitting to address the right HDU in a full PSRFITS dataset. 
+ 
+ \section{Mapping filterbank keywords to ObsCore and extensions}
+ 
+ Table \ref{tab:filterbank} is an attempt of such a mapping. A lot of obscore parameters are still missing.  
+ 
+ \section{More on discovery and Access}
+ 
+ As currently discussed in the DAL working group, the simple image access protocol \citep{std:SIAV2} is going to be upgraded into a "dataset access protocol" a server parameter based access to Obscore databases. This could be very useful to discover dynamic spectra in PSRFITS or filterbank format.
+ 
+ Full retrieval of datasets may be provided by the access\_url field content of the ObsCore table or via the DataLink{links} response. More sophisticated access methods should use the SODA interface \citep{2017ivoa.spec.0517B}.
+   
+ SODA   is the IVOA cutout facility protocol for data "cubes".  It can be used to extract subparts of the datasets by limitation of ranges on the physical axes. It can also be used to change the datasets output format dynamically. DAL working group currently manages discusions for evolution of this standard in order to integrate interfaces to resampling facility and product type transformations. These evolution would be very useful to allow standardization of light curve or spectra extractions or changes in spectral quantity or time scales.    
+ 
+ SODA endpoints for specific datasets can be accessed directly from the discovery service response or via DataLink {links} endpoint using the "service descriptor" features of the DataLink specification.  
+
+
+\begin{landscape}
+\begin{longtable}{l  p{4cm} p{4cm} p{4cm} l} 
+\sptablerule
+\textbf{obscore column name}&\textbf{Nan\c cay}&\textbf{INAF}&\textbf{comment}\cr
+\sptablerule
+\sptablerule
+\texttt{t\_obs\_mjd} & \texttt{STT\_IMJD+ (STT\_SMJD+ STT\_OFFS)/86400  } & .... & .... \cr
+\sptablerule
+\texttt{t\_min}&\texttt{t\_obs\_mjd+ (OFFS\_SUB[0]- TSUBINT[0]/2) /86make400} & \texttt{ UTC\_To\_MJD(DATE\_OBS)}& Nan\c cay computation is very accurate. Is not INAF proposal enough? Or t\_obs\_mjd? \cr
+\sptablerule
+\texttt{t\_max} &          \texttt{t\_obs\_mjd+ (OFFS\_SUB[-1] -TSUBINT[-1]/2) /86400} & ..... & Nan\c cay computation. Nothing simpler \cr
+\sptablerule
+             \texttt{t\_exptime}      & \texttt{(t\_max - t\_min)*86400}          &   SCANLEN & SCANLEN is a requested exposure time. May be shorter in reality\cr
+\sptablerule
+             \texttt{t\_resolution}   &    \texttt{OFFS\_SUB[1]}  &     TBIN & mean(TSUBINT) approaches more t\_resolution definition. OFFS\_SUB and TBIN are more about sampling. \cr
+\sptablerule
+            
+\texttt{t\_xel}  & & & NBIN (fold mode) or int(NSTOT/NDBLK)   (search mode)  no NROWS in search mode ? \cr
+\sptablerule
+\sptablerule
+             \texttt{s\_ra}   &          \texttt{RA}  &   \texttt{RA\_RAD*180/PI} & ..... \cr
+\sptablerule
+             \texttt{s\_dec}  &          \texttt{DEC} &  \texttt{DEC\_RAD*180/PI} & .....  \cr
+\sptablerule
+             \texttt{s\_fov}  &          \texttt{2.07 for LOFAR} &  \texttt{19.7/(OBSFREQ- OBSBW/2) /1000/6} & It depends actually on the diameter of the antenna and the wavelength. Can we find a generic formula ~ 1.22*lambda/D Should be 19.7/OBSFEQ/1000/60\cr
+\sptablerule
+             \texttt{s\_region}    &    & \texttt{CIRCLE('ICRS', s\_ra, s\_dec, s\_fov/2.0)} & .... \cr
+\sptablerule
+             \texttt{s\_xel1} & & & actually 1. No sampling \cr
+\sptablerule
+             \texttt{s\_xel2} & & & actually 1. no sampling\cr
+\sptablerule
+             \texttt{s\_resolution} & & & doesn't make sense or equal to s\_fov (no source separation inside this range)\cr
+\sptablerule
+             \texttt{em\_min}   & \texttt{c/ (min(DAT\_FREQ)*1e6)}   &   \texttt{c/ ((OBSFREQ -OBSBW/2)*1e6)} & is simpler INAF formula sufficiently accurate ?  \cr
+\sptablerule
+             \texttt{em\_max}   &  \texttt{c/ (max(DAT\_FREQ)*1e6)}   &  \texttt{c/ ((OBSFREQ +OBSBW/2)*1e6)} & is simpler INAF formula sufficiently accurate ?  \cr
+\sptablerule
+             \texttt{em\_xel}   &   \texttt{-}   &   \texttt{OBSNCHAN} &   \cr 
+\sptablerule
+             \texttt{o\_ucd}    &        \texttt{phot.flux.density} &  \texttt{phot.flux.density} & \cr
+\sptablerule
+             \texttt{pol\_states}   &   \texttt{-}  & \texttt{depending on NPOL} &               not only also FD\_POLN  \cr
+\sptablerule
+             \texttt{pol\_xel}   & \texttt{-} & \texttt{NPOL}   &            \cr
+\sptablerule                        
+             \texttt{data\_product\_type} &  \texttt{cube} & \texttt{-}  &  dynamic spectrum \cr
+\sptablerule
+             \texttt{facility\_name}    &    \texttt{mapping from TELESCOP}  &   \texttt{TELESCOP} & \cr
+\sptablerule
+             \texttt{instrument\_name}  &    \texttt{TELESCOP} &      \texttt{FRONTEND, BACKEND} &  probably FRONTEND. BACKEND belongs to processiong tackled by provenance\cr
+\sptablerule
+             \texttt{target\_name}   &       \texttt{SRC\_NAME}  &   \texttt{SRC\_NAME} & \cr
+\sptablerule
+             \texttt{target\_class} &   \texttt{pulsar} &       \texttt{regular expression ?} & \cr
+\sptablerule
+             \texttt{calib\_level}        &  \texttt{1} &  \texttt{0 or 1} & \cr
+\sptablerule
+
+\caption{ObsCore  parameters for PSRFITS datasets}
+\label{tab:ObsCoreAtt}
+\end{longtable}
+\end{landscape}
+
+
+\begin{landscape}
+\begin{longtable}{l  p{4cm} p{4cm} p{4cm} l} 
+\sptablerule
+\textbf{ObsCore extension column name}&\textbf{origin}&\textbf{PSRFITS mapping}&\textbf{comment}\cr
+\sptablerule
+
+\texttt{t\_delt} & \texttt{time extension} & \texttt{TBIN} &  or mean(OFF\_SUB[n+1]- OFF\_SUB[n])\cr
+\sptablerule
+\texttt{t\_delt\_min} & \texttt{time extension} & \texttt{TBIN} & or min(OFF\_SUB[n+1]- OFF\_SUB[n]) \cr
+\sptablerule
+\texttt{t\_delt\_max} & \texttt{time extension} & \texttt{TBIN} & or max(OFF\_SUB[n+1]- OFF\_SUB[n]) \cr
+\sptablerule
+\texttt{t\_res\_min} & \texttt{time extension} & \texttt{min(TSUBINT)} & TSUBINT more appropriate than TBIN  \cr
+\sptablerule
+\texttt{t\_res\_max} & \texttt{time extension} & \texttt{max(TSUBINT)} & TSUBINT  more appropriate than TBIN \cr
+\sptablerule
+\texttt{t\_mode} & \texttt{} & \texttt{folded/search} &  \cr
+\sptablerule
+\texttt{t\_fold\_period} & \texttt{} &  & NULL for search mode \cr
+\sptablerule
+\texttt{t\_scale} & \texttt{time extension} & \texttt{TAI, TT, UTC, ...} & any of IVOA timescale vocabulary\footnote{https://www.ivoa.net/rdf/timescale/2019-03-15/timescale.html}
+not available in PSRFITS metadata \cr
+\sptablerule
+\texttt{t\_refPosition} & \texttt{time extension} & \texttt{time measured at this position}  & not availbale in PSRFITS metadata  \cr
+\sptablerule
+\texttt{t\_origin} & \texttt{time extension} & \texttt{origin of relative time} & not availbale in PSRFITS metadata\cr
+\sptablerule
+\texttt{t\_refDirection} & \texttt{time extension} & \texttt{should be position of source in sky} & not availbale in PSRFITS metadata \cr
+\sptablerule
+\texttt{t\_format} & \texttt{time extension} & \texttt{ISO, JD, MJD, julian year, ...} & not available in PSRFITS metadata \cr
+\sptablerule
+\texttt{s\_fov\_min} & \texttt{radio extension} &  1.22 * em\_min/D & where is D antenna diameter ? \cr
+\sptablerule
+\texttt{s\_fov\_max} & \texttt{radio extension} & 1.22 * em\_max/D & where is D, antenna diameter \cr
+\sptablerule
+\texttt{s\_resolution\_min} & \texttt{radio extension} & 1.22 * em\_min/D & doesn't make sense or equal to s\_fov (no source separation inside this range) \cr
+\sptablerule
+\texttt{s\_resolution\_max} & \texttt{radio extension} & 1.22 * em\_max/D  & doesn't make sense or equal to s\_fov (no source separation inside this range)\cr
+\sptablerule
+\texttt{f\_resolution} & \texttt{radio extension} & \texttt{mean(DATA\_FREQ[n+1]- DATA\_FREQ[n])} & Proposed by INAF because em\_res\_power changes too much along the spectral band \cr
+\sptablerule
+\texttt{f\_max} & \texttt{radio extension} & \texttt{c / em\_min} & Radio astronomers prefer frequencies\cr
+\sptablerule
+\texttt{f\_min} & \texttt{radio extension} & \texttt{c / em\_max} & Radio astronomers prefer frequencies \cr
+\sptablerule
+\caption{ObsCore  extension mapping proposal for PSRFITS datasets}
+\label{tab:ObsCoreExt}
+\end{longtable}
+\end{landscape}
+
+\begin{landscape}
+\begin{longtable}{l  p{4cm}  p{4cm} l} 
+\sptablerule
+\textbf{obscore column name}&\textbf{filterbank keyword}&\textbf{comment}\cr
+\sptablerule
+\sptablerule
+\texttt{t\_min} &  \texttt{tsart} &  \cr
+\texttt{t\_max} &  \texttt{tstart + tsamp * nsamples} &  \cr
+\texttt{t\_exptime} &  \texttt{tsamp * nsamples} &  assuming there is no interruption during observation\cr
+\texttt{t\_delt} &  \texttt{tsamp} &  tsamp looks more  a cadence than a resolution\cr
+\texttt{t\_resolution} &  \texttt{tsamp ??? } &  tsamp looks more  a cadence than a resolution\cr
+\texttt{t\_mode} &  \texttt{folded/search } &  \cr
+\texttt{t\_fold\_period} &  \texttt{period } &  \cr
+\texttt{s\_ra} &  \texttt{src\_raj} &  \cr
+\texttt{s\_dec} &  \texttt{src\_dec} &  \cr
+\texttt{s\_fov} &  \texttt{?} & depends from telescope and frequency \cr
+\texttt{em\_min} &\texttt{c/(fch1+foff*nchans)/10e6} &  \cr
+\texttt{em\_max} & \texttt{c/fch1/10e6} &  \cr
+\texttt{f\_max} &\texttt{(fch1+foff*nchans)*10e6} & radioastronomers prefer frequencies \cr
+\texttt{f\_min} & \texttt{fch1*10e6} & radio astronomers prefer frequencies\cr
+\texttt{f\_resolution} & \texttt{foff} & sampling, resolution or both ?\cr
+\texttt{pol\_xel} & \texttt{nifs} & \cr
+\texttt{pol\_states} & \texttt{?} & doesn't appear in keywords  ?\cr
+\texttt{o\_ucd} & \texttt{phot.flux.density} & is that always true for filterbank  ?\cr
+\texttt{dataproduct\_type} & \texttt{data\_type} & filterbank is dynamic spectrum ? otherwise lightcurve , spectrum ?\cr
+\texttt{facility\_name} & \texttt{inferred from telescope\_id value} & \cr
+\texttt{instrument\_name} & \texttt{inferred from machine\_id value} & \cr
+\texttt{target\_name} & \texttt{source\_name} & \cr
+\texttt{calib\_level} & \texttt{1} & \cr
+
+\sptablerule
+\caption{ObsCore  and Onscore extension mapping proposal for filterbank  datasets}
+\label{tab:filterbank}
+\end{longtable}
+\end{landscape}
+\appendix
+
+\section{Changes from Previous Versions}
+
+\subsection{Creation-1.0-2022-09-23}
+
+This is the initial document version. 
+
+\bibliography{ivoatex/docrepo}
+
+\end{document}
+
+ 
